@@ -16,7 +16,7 @@ try:
 except ImportError:
     pwd = None
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 MIN_AG_VERSION = "1.22.2"
 USE_COLOR = False
 AUTH_PATCH_SWITCH_VERSION = Version("1.23")
@@ -481,6 +481,30 @@ def get_user_settings_path():
     return ""
 
 
+def get_user_data_dir():
+    """Returns the Antigravity user data directory."""
+    path = get_user_settings_path()
+    if not path:
+        return ""
+    # settings.json is in <data_dir>/User/settings.json
+    return os.path.dirname(os.path.dirname(path))
+
+
+def fix_posix_permissions(path):
+    """Ensures the path and its contents are owned by the invoking user on POSIX when running via sudo."""
+    if os.name != "posix" or os.getuid() != 0:
+        return
+
+    sudo_uid = os.environ.get("SUDO_UID")
+    sudo_gid = os.environ.get("SUDO_GID")
+
+    if sudo_uid and sudo_gid:
+        try:
+            subprocess.run(["chown", "-R", f"{sudo_uid}:{sudo_gid}", path], check=False)
+        except Exception:
+            pass
+
+
 def backup_json_file(path):
     if not os.path.exists(path):
         return ""
@@ -936,6 +960,79 @@ def do_patch(main_js_path, show_search_line=False):
     print("  Restart Antigravity and sign in.")
 
 
+def do_fix_429():
+    data_dir = get_user_data_dir()
+    if not data_dir or not os.path.isdir(data_dir):
+        print(color("  [!] Antigravity data directory not found.", COLOR_RED))
+        return
+
+    print(f"  [*] Data directory: {color(data_dir, COLOR_CYAN)}")
+    print(color("  [!] This will reset your Antigravity configuration (tokens, quota).", COLOR_YELLOW))
+    print(color("  [!] Dialogues will be preserved, but you will need to sign in again.", COLOR_YELLOW))
+    print(color("  [!] Ensure Antigravity is COMPLETELY closed before proceeding.", COLOR_RED))
+
+    if not confirmed("Proceed with the fix?"):
+        return
+    print()
+
+    # Create backup name
+    backup_base = data_dir + "_backup_" + time.strftime("%Y%m%d_%H%M%S")
+    backup_dir = backup_base
+    counter = 1
+    while os.path.exists(backup_dir):
+        backup_dir = f"{backup_base}_{counter}"
+        counter += 1
+
+    print(f"  [*] Moving current data to: {os.path.basename(backup_dir)}...")
+
+    try:
+        shutil.move(data_dir, backup_dir)
+    except Exception as e:
+        print(color(f"  [!] Failed to move data directory: {e}", COLOR_RED))
+        print("  [i] Try closing Antigravity and run the patcher as administrator.")
+        return
+
+    print(color("  [+] Data moved to backup", COLOR_GREEN))
+    print("  [*] Creating fresh configuration...")
+
+    try:
+        # Recreate the data directory and User subfolder
+        user_dir = os.path.join(data_dir, "User")
+        os.makedirs(user_dir, exist_ok=True)
+
+        # Restore storage folders (dialogues)
+        storage_folders = ["globalStorage", "workspaceStorage"]
+        restored_count = 0
+        for folder in storage_folders:
+            src = os.path.join(backup_dir, "User", folder)
+            dst = os.path.join(user_dir, folder)
+            if os.path.isdir(src):
+                print(f"  [*] Restoring {folder}...")
+                shutil.copytree(src, dst)
+                restored_count += 1
+        
+        if restored_count > 0:
+            print(color(f"  [+] Restored {restored_count} storage folder(s)", COLOR_GREEN))
+        else:
+            print(color("  [i] No storage folders found to restore", COLOR_YELLOW))
+
+        # Fix permissions on POSIX if running as root
+        fix_posix_permissions(data_dir)
+
+        print(color("\n  [+] HTTP 429 fix applied successfully!", COLOR_GREEN, COLOR_BOLD))
+        print("  [i] What to do now:")
+        print("      1. Start Antigravity.")
+        print("      2. Sign in to your account.")
+        print("      3. If you still see errors, run 'Apply patch' (Option 1) again.")
+        print("      [!] Note: VPNs or other bypass methods might be detected by Google and cause 429 errors.")
+        print(f"  [i] Your backup is safe at: {backup_dir}")
+
+    except Exception as e:
+        print(color(f"  [!] Error during restoration: {e}", COLOR_RED))
+        print(color(f"  [i] Your backup is preserved at: {backup_dir}", COLOR_YELLOW))
+        print("  [i] You can try to restore it manually if needed.")
+
+
 def do_restore(main_js_path, show_search_line=False):
     current_content = None
     try:
@@ -1070,7 +1167,8 @@ def main():
     while True:
         print(color("  1. Apply patch", COLOR_GREEN))
         print(color("  2. Restore from backup", COLOR_YELLOW))
-        print(color("  3. Open GitHub repository", COLOR_CYAN))
+        print(color("  3. Fix HTTP 429 (Too Many Requests)", COLOR_CYAN))
+        print(color("  4. Open GitHub repository", COLOR_CYAN))
         print(color("  0. Exit", COLOR_RED))
 
         choice = input(color("\n  > ", COLOR_CYAN, COLOR_BOLD)).strip()
@@ -1088,6 +1186,8 @@ def main():
         elif choice == "2":
             do_restore(main_js_path, show_search_line=searched)
         elif choice == "3":
+            do_fix_429()
+        elif choice == "4":
             print_target_info(main_js_path, show_search_line=searched)
             print()
             url = "https://github.com/AvenCores/open-antigravity-unlock"
