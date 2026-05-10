@@ -259,6 +259,16 @@ xattr -dr com.apple.quarantine /path/to/Antigravity.app
 xcode-select --install
 ```
 
+### Ошибка "Operation not permitted" при патчинге
+
+Если вы столкнулись с ошибкой `[!] Backup error: [Errno 1] Operation not permitted: '/Applications/Antigravity.app/Contents/Resources/app/out/main.js.bak’`:
+
+1. Добавьте для терминала разрешение на полный доступ к диску: **Системные настройки → Конфиденциальность и безопасность → Полный доступ к диску** (System Settings → Privacy & Security → Full Disk Access).
+2. Снимите карантин с приложения командой:
+   ```bash
+   sudo xattr -rd com.apple.quarantine /path/to/Antigravity.app
+   ```
+
 ### Если приложение не запускается после патча
 
 1. Убедись, что `codesign` доступен: `which codesign`.
