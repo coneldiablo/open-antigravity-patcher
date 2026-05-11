@@ -804,6 +804,22 @@ def print_target_info(main_js_path, show_search_line=False):
     if show_search_line:
         print("  [*] Searching for Antigravity installation...")
     print(f"  [*] Target: {color(main_js_path, COLOR_CYAN)}")
+
+    if os.path.exists(main_js_path):
+        print(f"  [*] Status: {color('found', COLOR_GREEN)}")
+        try:
+            with open(main_js_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            if is_already_patched(content):
+                patch_text = color("already patched", COLOR_YELLOW)
+            else:
+                patch_text = color("not patched", COLOR_GREEN)
+            print(f"  [*] Patch:  {patch_text}")
+        except Exception:
+            print(f"  [*] Patch:  {color('unreadable', COLOR_RED)}")
+    else:
+        print(f"  [*] Status: {color('not found', COLOR_RED)}")
+
     ver_str = get_ag_version(main_js_path)
     if ver_str:
         print(f"  [*] Antigravity version: {color(ver_str, COLOR_GREEN)}")
