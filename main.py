@@ -789,6 +789,47 @@ def is_already_patched(content):
 # UI-утилиты
 # ---------------------------------------------------------------------------
 
+def clean_path(raw_path):
+    return raw_path.strip().strip('"').strip("'")
+
+
+def resolve_target_path(raw_path):
+    if not raw_path:
+        return ""
+    cleaned = clean_path(raw_path)
+    if not cleaned:
+        return ""
+    expanded = os.path.expandvars(os.path.expanduser(cleaned))
+    resolved = os.path.abspath(expanded)
+    
+    # Если указана директория, пробуем найти в ней main.js
+    if os.path.isdir(resolved):
+        found = find_main_js(resolved)
+        return found if found else resolved
+    return resolved
+
+
+def pause():
+    input("  Press Enter to return to menu...")
+
+
+def print_launch_examples():
+    script_name = os.path.basename(sys.argv[0]) or "main.py"
+    cmd = script_name if getattr(sys, "frozen", False) else f"python {script_name}"
+
+    print(f"  [i] Usage examples with custom path:")
+    print(f"      Windows: {color(f'{cmd} \"C:\\Path\\To\\Antigravity\"', COLOR_YELLOW)}")
+    print(f"      macOS:   {color(f'{cmd} \"/Applications/Antigravity.app\"', COLOR_YELLOW)}")
+    print(f"      Linux:   {color(f'{cmd} \"/usr/share/antigravity\"', COLOR_YELLOW)}")
+
+
+def print_path_examples():
+    print(f"  [i] Path examples:")
+    print(f"      Windows: {color(r'C:\\Users\\Name\\AppData\\Local\\Programs\\Antigravity', COLOR_YELLOW)}")
+    print(f"      macOS:   {color('/Applications/Antigravity.app', COLOR_YELLOW)}")
+    print(f"      Linux:   {color('/usr/share/antigravity', COLOR_YELLOW)}")
+
+
 def prompt_yn(question):
     question = question.rstrip()
     prompt = f"  [?] {question} ({color('y', COLOR_GREEN)}/{color('n', COLOR_RED)}): "
@@ -1143,23 +1184,23 @@ def main():
     print_banner()
 
     main_js_path = ""
-    root = ""
-
+    
+    # 1. Проверяем аргументы командной строки
     if len(sys.argv) > 1:
-        arg = sys.argv[1]
-        if arg.endswith("main.js"):
-            main_js_path = arg
-        else:
-            root = arg
-            main_js_path = find_main_js(root)
+        arg = " ".join(sys.argv[1:])
+        main_js_path = resolve_target_path(arg)
+        if not os.path.exists(main_js_path):
+            print(color(f"  [!] Provided path does not exist: {main_js_path}", COLOR_RED))
+            main_js_path = ""
 
+    # 2. Проверяем текущую директорию
     if not main_js_path:
-        cwd = os.getcwd()
-        local = os.path.join(cwd, "main.js")
+        local = os.path.join(os.getcwd(), "main.js")
         if os.path.exists(local):
             main_js_path = local
             print("  [*] Found main.js in current directory")
 
+    # 3. Авто-поиск в системе
     searched = False
     if not main_js_path:
         print("  [*] Searching for Antigravity installation...")
@@ -1168,13 +1209,18 @@ def main():
         if root:
             main_js_path = find_main_js(root)
 
+    # Если ничего не нашли, просим ввести вручную сразу
     if not main_js_path:
-        print("  [!] main.js not found!")
-        print("  [i] Put main.js next to ag_patcher.py, or specify path:")
-        if os.name == "nt":
-            print("      python ag_patcher.py C:\\path\\to\\Antigravity")
-        else:
-            print("      python ag_patcher.py /usr/share/antigravity")
+        print(color("  [!] Antigravity installation not found automatically.", COLOR_YELLOW))
+        print("  [i] Please specify the path to Antigravity or main.js.")
+        print_path_examples()
+        raw = input(color("\n  Path > ", COLOR_CYAN, COLOR_BOLD)).strip()
+        if raw:
+            main_js_path = resolve_target_path(raw)
+
+    if not main_js_path or not os.path.exists(main_js_path):
+        print(color("\n  [!] Target file not found.", COLOR_RED))
+        print_launch_examples()
         input("\n  Press Enter to exit...")
         return
 
@@ -1185,6 +1231,7 @@ def main():
         print(color("  2. Restore from backup", COLOR_YELLOW))
         print(color("  3. Fix HTTP 429 (Too Many Requests)", COLOR_CYAN))
         print(color("  4. Open GitHub repository", COLOR_CYAN))
+        print(color("  5. Select custom main.js path", COLOR_CYAN))
         print(color("  0. Exit", COLOR_RED))
 
         choice = input(color("\n  > ", COLOR_CYAN, COLOR_BOLD)).strip()
@@ -1209,13 +1256,26 @@ def main():
             url = "https://github.com/AvenCores/open-antigravity-unlock"
             webbrowser.open(url)
             print(f"  [+] Opening: {color(url, COLOR_CYAN)}")
+        elif choice == "5":
+            print("  [i] Enter the path to Antigravity folder or main.js file.")
+            print_path_examples()
+            raw = input(color("\n  Path > ", COLOR_CYAN, COLOR_BOLD)).strip()
+            if raw:
+                new_path = resolve_target_path(raw)
+                if os.path.exists(new_path):
+                    main_js_path = new_path
+                    searched = False # Мы теперь знаем точный путь
+                    print(color(f"  [+] Target updated to: {main_js_path}", COLOR_GREEN))
+                else:
+                    print(color(f"  [!] Path does not exist: {new_path}", COLOR_RED))
+            handled = True
         else:
             handled = False
             print("  [!] Invalid choice")
         print()
 
         if handled:
-            input("  Press Enter to return to menu...")
+            pause()
             redraw_main_screen(main_js_path, show_search_line=searched)
 
 
