@@ -16,7 +16,7 @@ try:
 except ImportError:
     pwd = None
 
-VERSION = "1.1.1"
+VERSION = "1.1.2"
 MIN_AG_VERSION = "1.22.2"
 USE_COLOR = False
 AUTH_PATCH_SWITCH_VERSION = Version("1.23")
