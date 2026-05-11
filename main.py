@@ -1229,7 +1229,10 @@ def main():
             main_js_path = resolve_target_path(raw)
 
     if not main_js_path or not os.path.exists(main_js_path):
-        print(color("\n  [!] Target file not found.", COLOR_RED))
+        clear_screen()
+        print_banner()
+        print(color("  [!] Target file not found.", COLOR_RED))
+        print()
         print_launch_examples()
         input("\n  Press Enter to exit...")
         return
