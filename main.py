@@ -880,6 +880,11 @@ def warn_about_unsafe_backup(main_js_path, installed_version_str=None, current_c
 # ---------------------------------------------------------------------------
 
 def do_patch(main_js_path, show_search_line=False):
+    if not os.path.isfile(main_js_path):
+        print(color(f"  [!] Target is not a file: {main_js_path}", COLOR_RED))
+        print(color("  [i] Please select a valid main.js file or Antigravity folder.", COLOR_YELLOW))
+        return
+
     ver_status, ver_str = check_ag_version(main_js_path)
     parsed_version = parse_version_safe(ver_str)
 
