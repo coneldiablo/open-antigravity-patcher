@@ -1063,7 +1063,7 @@ def do_fix_429():
         print("      1. Start Antigravity.")
         print("      2. Sign in to your account.")
         print("      3. If you still see errors, run 'Apply patch' (Option 1) again.")
-        print("      [!] Note: VPNs might cause 429 errors.")
+        print("      [!] Note: VPNs or other bypass methods might be detected by Google and cause 429 errors.")
         print(f"  [i] Your backup is safe at: {backup_dir}")
 
     except Exception as e:
