@@ -1265,7 +1265,13 @@ if __name__ == "__main__":
         print("  [!] Root access is required to patch files in /usr/share/antigravity.")
         if confirmed("Re-launch with sudo?"):
             try:
-                os.execvp("sudo", ["sudo", sys.executable] + sys.argv)
+                # В PyInstaller bundle (frozen) sys.executable и sys.argv[0] — это путь к бинарнику.
+                # Чтобы не дублировать путь в аргументах, передаем только sys.argv[1:].
+                if getattr(sys, "frozen", False):
+                    args = ["sudo", sys.executable] + sys.argv[1:]
+                else:
+                    args = ["sudo", sys.executable] + sys.argv
+                os.execvp("sudo", args)
             except Exception as e:
                 print(f"  [!] Failed to re-launch with sudo: {e}")
                 sys.exit(1)
