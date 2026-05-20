@@ -42,7 +42,10 @@
 </div>
 
 # ⚠️ Удалите Antigravity 2.0 и установите Antigravity IDE
-На странице [antigravity.google/download](https://antigravity.google/download) в самом низу скачайте **Antigravity IDE**.
+
+После недавней смены продуктов со стороны Google версия **Antigravity 2.0** больше не поддается патчингу и не поддерживается данным инструментом. Для корректной работы патчера требуется именно **Antigravity IDE**.
+
+Скачать её можно на странице [antigravity.google/download](https://antigravity.google/download?utm_source=chatgpt.com) — нужная версия находится в самом низу страницы.
 
 ![1](https://i.ibb.co/bjN3fGZH/1.png)
 
