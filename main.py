@@ -14,7 +14,7 @@ if __name__ == "__main__":
         else:
             print("  [!] Could not elevate privileges. The script may fail to modify files.")
     elif os.name == "posix" and not is_admin():
-        print("  [!] Root access is required to patch files in /usr/share/antigravity-ide.")
+        print("  [!] Root access is required to patch files in the root directory.")
         if confirmed("Re-launch with sudo?"):
             try:
                 if getattr(sys, "frozen", False):
