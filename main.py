@@ -528,6 +528,7 @@ def backup_json_file(path):
         backup_path = f"{base}-{counter}"
 
     shutil.copy2(path, backup_path)
+    fix_posix_permissions(backup_path)
     return backup_path
 
 
@@ -607,6 +608,7 @@ def patch_runtime_settings(ag_version=None):
         with open(settings_path, "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=4, ensure_ascii=False)
             f.write("\n")
+        fix_posix_permissions(settings_path)
     except Exception as e:
         return {
             "Name": "temporary runtime settings workaround",
@@ -971,6 +973,7 @@ def do_patch(main_js_path, show_search_line=False):
         print("  [*] Creating backup...")
         try:
             shutil.copy2(main_js_path, backup_path)
+            fix_posix_permissions(backup_path)
             print(f"  [+] Backup: {os.path.basename(backup_path)} "
                   f"({format_bytes(file_size(backup_path))})")
         except Exception as e:
@@ -1005,6 +1008,7 @@ def do_patch(main_js_path, show_search_line=False):
     try:
         with open(main_js_path, "w", encoding="utf-8") as f:
             f.write(new_content)
+        fix_posix_permissions(main_js_path)
     except Exception as e:
         print(f"  [!] Write error: {e}")
         return
@@ -1159,6 +1163,7 @@ def do_restore(main_js_path, show_search_line=False):
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(data)
         os.replace(tmp_path, main_js_path)
+        fix_posix_permissions(main_js_path)
     except Exception as e:
         print(f"\n  [!] Restore error: {e}")
         if os.path.exists(tmp_path):
@@ -1841,6 +1846,7 @@ def do_patch_antigravity(antigravity_root):
         print("  [*] Creating backup of original ASAR...")
         try:
             shutil.copy2(asar_path, source_asar_path)
+            fix_posix_permissions(source_asar_path)
             print(f"  [+] Backup: {os.path.basename(source_asar_path)} ({format_bytes(file_size(source_asar_path))})")
         except Exception as e:
             print(color(f"  [!] Backup error: {e}", COLOR_RED))
@@ -1869,6 +1875,9 @@ def do_patch_antigravity(antigravity_root):
     if patch_antigravity_main_js(dest_folder, rollback=False):
         print("  [*] Packing ASAR archive...")
         if pack_asar(dest_folder, asar_path, reference_asar_path=source_asar_path):
+            fix_posix_permissions(asar_path)
+            if os.path.exists(asar_path + ".unpacked"):
+                fix_posix_permissions(asar_path + ".unpacked")
             print(color("  [+] Antigravity app.asar patched successfully!", COLOR_GREEN))
             resign_macos_bundle(asar_path)
             
@@ -1975,6 +1984,9 @@ def do_restore_antigravity(antigravity_root):
         if patch_antigravity_main_js(dest_folder, rollback=True):
             print("  [*] Packing ASAR...")
             if pack_asar(dest_folder, asar_path):
+                fix_posix_permissions(asar_path)
+                if os.path.exists(asar_path + ".unpacked"):
+                    fix_posix_permissions(asar_path + ".unpacked")
                 print(color("  [+] Antigravity rollback completed successfully!", COLOR_GREEN))
                 resign_macos_bundle(asar_path)
             else:
@@ -2001,6 +2013,7 @@ def do_restore_antigravity(antigravity_root):
                 os.rename(asar_path, temp_old_path)
         
         shutil.copy2(source_asar_path, asar_path)
+        fix_posix_permissions(asar_path)
         print(color("  [+] Restored original ASAR from backup!", COLOR_GREEN))
         resign_macos_bundle(asar_path)
         print(f"  [i] Backup file {os.path.basename(source_asar_path)} was kept.")
