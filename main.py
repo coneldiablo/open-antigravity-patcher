@@ -176,6 +176,8 @@ def find_install_root():
         mac_candidates = [
             "/Applications/Antigravity IDE.app",
             os.path.expanduser("~/Applications/Antigravity IDE.app"),
+            "/Applications/antigravity ide.app",
+            os.path.expanduser("~/Applications/antigravity ide.app"),
         ]
         for app in mac_candidates:
             candidates.append(os.path.join(app, "Contents", "Resources", "app"))
@@ -183,6 +185,8 @@ def find_install_root():
         candidates.extend([
             "/usr/share/antigravity-ide",
             "/opt/Antigravity IDE",
+            "/opt/antigravity-ide",
+            "/opt/antigravity ide",
             "/opt/Antigravity IDE/resources/app/out",
         ])
 
@@ -224,7 +228,7 @@ def find_install_root():
 
 def find_main_js(root):
     # macOS: пользователь может передать путь к .app-бандлу напрямую
-    if sys.platform == "darwin" and root.endswith(".app") and os.path.isdir(root):
+    if sys.platform == "darwin" and root.lower().endswith(".app") and os.path.isdir(root):
         root = os.path.join(root, "Contents", "Resources", "app")
 
     for sub in [
@@ -1645,6 +1649,8 @@ def find_antigravity_root():
         mac_candidates = [
             "/Applications/Antigravity.app",
             os.path.expanduser("~/Applications/Antigravity.app"),
+            "/Applications/antigravity.app",
+            os.path.expanduser("~/Applications/antigravity.app"),
         ]
         for app in mac_candidates:
             if os.path.exists(app):
@@ -1654,6 +1660,8 @@ def find_antigravity_root():
             "/usr/share/antigravity",
             "/opt/Antigravity",
             "/opt/antigravity",
+            "/usr/local/share/antigravity",
+            "/usr/local/share/Antigravity",
         ])
 
     if os.name == "nt":
@@ -1746,18 +1754,28 @@ def resolve_antigravity_paths(root):
         if not os.path.exists(asar):
             asar = os.path.join(root, "Contents", "Resources", "app1.asar")
         exe = os.path.join(root, "Contents", "MacOS", "Antigravity")
+        if not os.path.exists(exe):
+            lower_exe = os.path.join(root, "Contents", "MacOS", "antigravity")
+            if os.path.exists(lower_exe):
+                exe = lower_exe
         return asar, exe
 
     asar = os.path.join(root, "resources", "app.asar")
     if not os.path.exists(asar):
         asar = os.path.join(root, "resources", "app1.asar")
-    
+
     exe_name = "Antigravity"
     if os.name == "nt":
         exe_name += ".exe"
-    exe = os.path.join(root, exe_name)
-    return asar, exe
 
+    exe = os.path.join(root, exe_name)
+    if os.name == "posix" and sys.platform != "darwin":
+        if not os.path.exists(exe):
+            lower_exe = os.path.join(root, "antigravity")
+            if os.path.exists(lower_exe):
+                exe = lower_exe
+
+    return asar, exe
 def is_antigravity_patched(asar_path):
     if not os.path.exists(asar_path):
         return False
