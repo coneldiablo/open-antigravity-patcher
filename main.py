@@ -1857,6 +1857,7 @@ def do_patch_antigravity(antigravity_root):
         except Exception:
             pass
     os.makedirs(dest_folder, exist_ok=True)
+    fix_posix_permissions(dest_folder)
 
     print("  [*] Extracting ASAR archive...")
     success = extract_asar(source_asar_path, dest_folder)
@@ -1881,7 +1882,27 @@ def do_patch_antigravity(antigravity_root):
                         pass
                 
                 try:
-                    process = subprocess.Popen([exe_path], cwd=antigravity_root)
+                    popen_kwargs = {"cwd": antigravity_root, "env": os.environ.copy()}
+                    if os.name == "posix" and os.getuid() == 0:
+                        sudo_uid = os.environ.get("SUDO_UID")
+                        sudo_gid = os.environ.get("SUDO_GID")
+                        if sudo_uid and sudo_gid:
+                            def drop_privs():
+                                os.setgid(int(sudo_gid))
+                                os.setuid(int(sudo_uid))
+                            popen_kwargs["preexec_fn"] = drop_privs
+                            
+                            sudo_user = os.environ.get("SUDO_USER")
+                            if sudo_user and pwd:
+                                try:
+                                    user_info = pwd.getpwnam(sudo_user)
+                                    popen_kwargs["env"]["HOME"] = user_info.pw_dir
+                                    popen_kwargs["env"]["USER"] = sudo_user
+                                    popen_kwargs["env"]["LOGNAME"] = sudo_user
+                                except Exception:
+                                    pass
+
+                    process = subprocess.Popen([exe_path], **popen_kwargs)
                     print("  [*] Waiting for frontend_patch_result.json to be written...")
                     
                     start_time = time.time()
