@@ -32,9 +32,7 @@ def ensure_linux_terminal():
     
     for term in terminals:
         try:
-            env = os.environ.copy()
-            env["SPAWNED_BY_GUI"] = "1"
-            subprocess.Popen(term + [executable] + args, env=env)
+            subprocess.Popen(term + [executable, "--spawned-by-gui"] + args)
             sys.exit(0)
         except Exception:
             continue
@@ -42,6 +40,12 @@ def ensure_linux_terminal():
 
 if __name__ == "__main__":
     ensure_linux_terminal()
+    
+    spawned_by_gui = False
+    if "--spawned-by-gui" in sys.argv:
+        spawned_by_gui = True
+        sys.argv.remove("--spawned-by-gui")
+        
     exit_code = 0
     try:
         setup_console()
@@ -55,13 +59,17 @@ if __name__ == "__main__":
             if confirmed("Re-launch with sudo?"):
                 try:
                     args = ["sudo"]
-                    if os.environ.get("SPAWNED_BY_GUI") == "1":
-                        args.extend(["env", "SPAWNED_BY_GUI=1"])
-                    
                     if getattr(sys, "frozen", False):
-                        args.extend([sys.executable] + sys.argv[1:])
+                        args.append(sys.executable)
                     else:
-                        args.extend([sys.executable] + sys.argv)
+                        args.append(sys.executable)
+                        if sys.argv and sys.argv[0]:
+                            args.append(sys.argv[0])
+                    
+                    if spawned_by_gui:
+                        args.append("--spawned-by-gui")
+                        
+                    args.extend(sys.argv[1:])
                     os.execvp("sudo", args)
                 except Exception as e:
                     print(f"  [!] Failed to re-launch with sudo: {e}")
@@ -84,7 +92,7 @@ if __name__ == "__main__":
         traceback.print_exc()
         exit_code = 1
     finally:
-        if os.environ.get("SPAWNED_BY_GUI") == "1":
+        if spawned_by_gui:
             try:
                 input("\n  Press Enter to exit...")
             except:
