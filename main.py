@@ -248,7 +248,9 @@ def find_main_js(root):
 # ---------------------------------------------------------------------------
 
 def get_ag_version(main_js_path):
-    """Читает версию Antigravity IDE из реестра Windows или package.json на Linux."""
+    """Читает версию Antigravity IDE из реестра Windows или package.json на Linux.
+    Возвращает (version_str, is_pkg_mgr).
+    """
     if os.name == "posix":
         # Пробуем менеджеры пакетов (apt, rpm) с разными именами
         pkg_names = ["antigravity-ide", "antigravity-ide-bin", "antigravity-ide-custom"]
@@ -263,7 +265,7 @@ def get_ag_version(main_js_path):
                 if result.returncode == 0:
                     ver = result.stdout.strip()
                     if ver:
-                        return ver
+                        return ver, True
             except Exception:
                 pass
 
@@ -277,7 +279,7 @@ def get_ag_version(main_js_path):
                 if result.returncode == 0:
                     ver = result.stdout.strip()
                     if ver:
-                        return ver
+                        return ver, True
             except Exception:
                 pass
 
@@ -293,10 +295,10 @@ def get_ag_version(main_js_path):
                         data = json.load(f)
                     ver = data.get("version", "").strip()
                     if ver:
-                        return ver
+                        return ver, False
                 except Exception:
                     pass
-        return None
+        return None, False
 
     if os.name == "nt":
         try:
@@ -306,13 +308,13 @@ def get_ag_version(main_js_path):
                     with winreg.OpenKey(hive, AG_REGISTRY_SUBKEY) as key:
                         display_ver, _ = winreg.QueryValueEx(key, "DisplayVersion")
                         if display_ver and display_ver.strip():
-                            return display_ver.strip()
+                            return display_ver.strip(), True
                 except OSError:
                     pass
         except ImportError:
             pass
 
-    return None
+    return None, False
 
 
 def check_ag_version(main_js_path):
@@ -320,14 +322,20 @@ def check_ag_version(main_js_path):
     Проверяет версию Antigravity IDE.
     Возвращает (VersionStatus, detected_version_str | None).
     """
-    ver_str = get_ag_version(main_js_path)
+    ver_str, is_pkg_mgr = get_ag_version(main_js_path)
 
     if ver_str is None:
         return VersionStatus.NOT_FOUND, None
 
     try:
         detected = Version(ver_str)
-        minimum = Version(MIN_AG_VERSION)
+        
+        # Минимальная версия: 1.107.0 для кастомных Linux билдов, иначе MIN_AG_VERSION
+        min_ver_str = MIN_AG_VERSION
+        if os.name == "posix" and sys.platform != "darwin" and not is_pkg_mgr:
+            min_ver_str = "1.107.0"
+            
+        minimum = Version(min_ver_str)
         status = VersionStatus.OK if detected >= minimum else VersionStatus.TOO_OLD
         return status, ver_str
     except Exception:
