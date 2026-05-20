@@ -19,7 +19,7 @@ except ImportError:
     pwd = None
 
 VERSION = "1.1.4"
-MIN_AG_VERSION = "1.22.2"
+MIN_AG_VERSION = "2.0.1"
 USE_COLOR = False
 AUTH_PATCH_SWITCH_VERSION = Version("1.23")
 RUNTIME_SETTINGS_SWITCH_VERSION = Version("1.23")
