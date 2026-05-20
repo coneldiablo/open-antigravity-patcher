@@ -18,6 +18,113 @@ def clean_path(raw_path):
     return raw_path.strip().strip('"').strip("'")
 
 
+def find_portable_candidates(search_type="ide"):
+    """Ищет портативные версии в пользовательских папках и на других дисках."""
+    import string
+    roots = []
+
+    # 1. Добавляем домашнюю директорию и стандартные подпапки
+    home = os.path.expanduser("~")
+    if home and os.path.isdir(home):
+        roots.append(home)
+        for sub in ["Downloads", "Desktop", "Documents"]:
+            p = os.path.join(home, sub)
+            if os.path.isdir(p):
+                roots.append(p)
+
+    # 2. Добавляем текущую рабочую директорию
+    cwd = os.getcwd()
+    if cwd and os.path.isdir(cwd) and cwd not in roots:
+        roots.append(cwd)
+
+    # 3. Для Windows добавляем корни других дисков (кроме системного C:)
+    if os.name == "nt":
+        for letter in string.ascii_uppercase:
+            if letter == "C":
+                continue
+            drive = f"{letter}:\\"
+            if os.path.exists(drive):
+                roots.append(drive)
+
+    candidates = []
+    visited_dirs = 0
+    max_dirs = 1500
+
+    for root in roots:
+        if not os.path.isdir(root):
+            continue
+        for dirpath, dirnames, filenames in os.walk(root):
+            visited_dirs += 1
+            if visited_dirs > max_dirs:
+                break
+
+            # Исключаем тяжелые/системные папки
+            prune_dirs = {
+                ".git", "node_modules", "AppData", "Application Data", "Library",
+                "System Volume Information", "$RECYCLE.BIN", "Windows", "Program Files",
+                "Program Files (x86)", "usr", "var", "sys", "proc", "dev", "dist", "build",
+                "__pycache__", ".idea", ".vscode"
+            }
+            # Фильтруем dirnames на месте
+            dirnames[:] = [d for d in dirnames if d.lower() not in [p.lower() for p in prune_dirs] and not d.startswith('.')]
+
+            # Вычисляем глубину относительно корня поиска
+            try:
+                rel = os.path.relpath(dirpath, root)
+                if rel == ".":
+                    depth = 0
+                else:
+                    depth = len(rel.split(os.path.sep))
+            except ValueError:
+                depth = 999
+
+            if depth >= 2:
+                dirnames[:] = []  # Не спускаемся глубже
+
+            dirname = os.path.basename(dirpath).lower()
+            # Проверяем, подходит ли папка под критерий эвристики
+            is_match = "antigravity" in dirname or dirpath == root or root == cwd
+
+            if is_match:
+                if search_type == "ide":
+                    # Ищем признаки Antigravity IDE
+                    for sub in [
+                        os.path.join("resources", "app", "out", "main.js"),
+                        os.path.join("resources", "app", "main.js"),
+                        os.path.join("out", "main.js"),
+                        "main.js",
+                    ]:
+                        if os.path.exists(os.path.join(dirpath, sub)):
+                            if dirpath not in candidates:
+                                candidates.append(dirpath)
+                                label = "Antigravity IDE"
+                                try:
+                                    from patcher.constants import COLOR_GREEN
+                                    from patcher.utils.console import color
+                                    print(color(f"  [+] Found portable {label} at: {dirpath}", COLOR_GREEN))
+                                except Exception:
+                                    print(f"  [+] Found portable {label} at: {dirpath}")
+                                break
+                elif search_type == "antigravity":
+                    # Ищем признаки Antigravity
+                    if os.path.exists(os.path.join(dirpath, "resources", "app.asar")) or \
+                       os.path.exists(os.path.join(dirpath, "resources", "app1.asar")):
+                        if dirpath not in candidates:
+                            candidates.append(dirpath)
+                            label = "Antigravity"
+                            try:
+                                from patcher.constants import COLOR_GREEN
+                                from patcher.utils.console import color
+                                print(color(f"  [+] Found portable {label} at: {dirpath}", COLOR_GREEN))
+                            except Exception:
+                                    print(f"  [+] Found portable {label} at: {dirpath}")
+
+        if visited_dirs > max_dirs:
+            break
+
+    return candidates
+
+
 def find_install_root():
     candidates = []
 
@@ -73,6 +180,12 @@ def find_install_root():
         ]:
             if os.path.exists(os.path.join(path, sub)):
                 return path
+
+    # Fallback: heuristic search for portable IDE
+    portable = find_portable_candidates("ide")
+    if portable:
+        return portable[0]
+
     return ""
 
 
