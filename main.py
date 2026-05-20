@@ -842,7 +842,7 @@ def print_target_info(main_js_path, antigravity_root="", show_search_line=False)
                 print(f"      Status:  {color('unreadable', COLOR_RED)}")
                 print(f"      Patch:   {color('unreadable', COLOR_RED)}")
             
-            ver_str = get_ag_version(main_js_path)
+            ver_str, _ = get_ag_version(main_js_path)
             if ver_str:
                 print(f"      Version: {color(ver_str, COLOR_GREEN)}")
             else:
