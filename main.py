@@ -16,7 +16,7 @@ try:
 except ImportError:
     pwd = None
 
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 MIN_AG_VERSION = "1.22.2"
 USE_COLOR = False
 AUTH_PATCH_SWITCH_VERSION = Version("1.23")
@@ -99,8 +99,8 @@ def print_banner():
     )
     print(
         color("  ║  ", COLOR_CYAN, COLOR_BOLD)
-        + color("Region bypass for Antigravity", COLOR_CYAN)
-        + color("                ║", COLOR_CYAN, COLOR_BOLD)
+        + color("Region bypass for Antigravity IDE", COLOR_CYAN)
+        + color("            ║", COLOR_CYAN, COLOR_BOLD)
     )
     print(
         color("  ║  ", COLOR_CYAN, COLOR_BOLD)
@@ -172,28 +172,28 @@ def find_install_root():
     if sys.platform == "darwin":
         # На macOS приложение — .app-бандл, main.js лежит внутри Contents/Resources/app
         mac_candidates = [
-            "/Applications/Antigravity.app",
-            os.path.expanduser("~/Applications/Antigravity.app"),
+            "/Applications/Antigravity IDE.app",
+            os.path.expanduser("~/Applications/Antigravity IDE.app"),
         ]
         for app in mac_candidates:
             candidates.append(os.path.join(app, "Contents", "Resources", "app"))
     elif os.name == "posix":
         candidates.extend([
-            "/usr/share/antigravity",
-            "/opt/Antigravity",
-            "/opt/Antigravity/resources/app/out",
+            "/usr/share/antigravity-ide",
+            "/opt/Antigravity IDE",
+            "/opt/Antigravity IDE/resources/app/out",
         ])
 
     if os.name == "nt":
         local_app_data = os.environ.get("LOCALAPPDATA")
         if local_app_data:
-            candidates.append(os.path.join(local_app_data, "Programs", "Antigravity"))
+            candidates.append(os.path.join(local_app_data, "Programs", "Antigravity IDE"))
         pf = os.environ.get("PROGRAMFILES")
         if pf:
-            candidates.append(os.path.join(pf, "Antigravity"))
+            candidates.append(os.path.join(pf, "Antigravity IDE"))
         pfx86 = os.environ.get("PROGRAMFILES(X86)")
         if pfx86:
-            candidates.append(os.path.join(pfx86, "Antigravity"))
+            candidates.append(os.path.join(pfx86, "Antigravity IDE"))
 
         try:
             import winreg
@@ -242,10 +242,10 @@ def find_main_js(root):
 # ---------------------------------------------------------------------------
 
 def get_ag_version(main_js_path):
-    """Читает версию Antigravity из реестра Windows или package.json на Linux."""
+    """Читает версию Antigravity IDE из реестра Windows или package.json на Linux."""
     if os.name == "posix":
         # Пробуем менеджеры пакетов (apt, rpm) с разными именами
-        pkg_names = ["antigravity", "antigravity-bin", "antigravity-custom"]
+        pkg_names = ["antigravity-ide", "antigravity-ide-bin", "antigravity-ide-custom"]
         
         # dpkg-query (Debian/Ubuntu)
         for pkg in pkg_names:
@@ -311,7 +311,7 @@ def get_ag_version(main_js_path):
 
 def check_ag_version(main_js_path):
     """
-    Проверяет версию Antigravity.
+    Проверяет версию Antigravity IDE.
     Возвращает (VersionStatus, detected_version_str | None).
     """
     ver_str = get_ag_version(main_js_path)
@@ -459,11 +459,11 @@ def get_posix_invoking_user_home():
 
 
 def get_user_settings_path():
-    """Returns the Antigravity user settings.json path for the current OS/user."""
+    """Returns the Antigravity IDE user settings.json path for the current OS/user."""
     if os.name == "nt":
         app_data = os.environ.get("APPDATA")
         if app_data:
-            return os.path.join(app_data, "Antigravity", "User", "settings.json")
+            return os.path.join(app_data, "Antigravity IDE", "User", "settings.json")
         return ""
 
     if sys.platform == "darwin":
@@ -471,7 +471,7 @@ def get_user_settings_path():
             get_posix_invoking_user_home(),
             "Library",
             "Application Support",
-            "Antigravity",
+            "Antigravity IDE",
             "User",
             "settings.json",
         )
@@ -481,13 +481,13 @@ def get_user_settings_path():
             config_home = os.path.join(get_posix_invoking_user_home(), ".config")
         else:
             config_home = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
-        return os.path.join(config_home, "Antigravity", "User", "settings.json")
+        return os.path.join(config_home, "Antigravity IDE", "User", "settings.json")
 
     return ""
 
 
 def get_user_data_dir():
-    """Returns the Antigravity user data directory."""
+    """Returns the Antigravity IDE user data directory."""
     path = get_user_settings_path()
     if not path:
         return ""
@@ -531,7 +531,7 @@ def patch_runtime_settings(ag_version=None):
         return {
             "Name": "temporary runtime settings workaround",
             "Applied": False,
-            "Detail": f"skipped for Antigravity < {RUNTIME_SETTINGS_SWITCH_VERSION}",
+            "Detail": f"skipped for Antigravity IDE < {RUNTIME_SETTINGS_SWITCH_VERSION}",
         }
 
     settings_path = get_user_settings_path()
@@ -777,16 +777,16 @@ def print_launch_examples():
     cmd = script_name if getattr(sys, "frozen", False) else f"python {script_name}"
 
     print(f"  [i] Usage examples with custom path:")
-    print(f"      Windows: {color(f'{cmd} \"C:\\Path\\To\\Antigravity\"', COLOR_YELLOW)}")
-    print(f"      macOS:   {color(f'{cmd} \"/Applications/Antigravity.app\"', COLOR_YELLOW)}")
-    print(f"      Linux:   {color(f'{cmd} \"/usr/share/antigravity\"', COLOR_YELLOW)}")
+    print(f"      Windows: {color(f'{cmd} \"C:\\Path\\To\\Antigravity IDE\"', COLOR_YELLOW)}")
+    print(f"      macOS:   {color(f'{cmd} \"/Applications/Antigravity IDE.app\"', COLOR_YELLOW)}")
+    print(f"      Linux:   {color(f'{cmd} \"/usr/share/antigravity-ide\"', COLOR_YELLOW)}")
 
 
 def print_path_examples():
     print(f"  [i] Path examples:")
-    print(f"      Windows: {color(r'C:\\Users\\Name\\AppData\\Local\\Programs\\Antigravity', COLOR_YELLOW)}")
-    print(f"      macOS:   {color('/Applications/Antigravity.app', COLOR_YELLOW)}")
-    print(f"      Linux:   {color('/usr/share/antigravity', COLOR_YELLOW)}")
+    print(f"      Windows: {color(r'C:\\Users\\Name\\AppData\\Local\\Programs\\Antigravity IDE', COLOR_YELLOW)}")
+    print(f"      macOS:   {color('/Applications/Antigravity IDE.app', COLOR_YELLOW)}")
+    print(f"      Linux:   {color('/usr/share/antigravity-ide', COLOR_YELLOW)}")
 
 
 def prompt_yn(question):
@@ -802,7 +802,7 @@ def confirmed(question):
 
 def print_target_info(main_js_path, show_search_line=False):
     if show_search_line:
-        print("  [*] Searching for Antigravity installation...")
+        print("  [*] Searching for Antigravity IDE installation...")
     print(f"  [*] Target: {color(main_js_path, COLOR_CYAN)}")
 
     exists = os.path.exists(main_js_path)
@@ -830,9 +830,9 @@ def print_target_info(main_js_path, show_search_line=False):
 
     ver_str = get_ag_version(main_js_path)
     if ver_str:
-        print(f"  [*] Antigravity version: {color(ver_str, COLOR_GREEN)}")
+        print(f"  [*] Antigravity IDE version: {color(ver_str, COLOR_GREEN)}")
     else:
-        print(color("  [!] Antigravity version: not detected", COLOR_YELLOW))
+        print(color("  [!] Antigravity IDE version: not detected", COLOR_YELLOW))
     
     size = file_size(main_js_path)
     print(f"  [*] Size:   {color(format_bytes(size), COLOR_GREEN if size > 0 else COLOR_YELLOW)}")
@@ -880,7 +880,7 @@ def warn_about_unsafe_backup(main_js_path, installed_version_str=None, current_c
 
     for warning in warnings:
         print(color(f"  [!] Backup warning: {warning}", COLOR_YELLOW))
-    print(color("  [!] Restoring this backup may break Antigravity.", COLOR_YELLOW))
+    print(color("  [!] Restoring this backup may break Antigravity IDE.", COLOR_YELLOW))
     print(color(f"  [i] Backup kept: {os.path.basename(backup_path)}", COLOR_YELLOW))
     return True, True
 
@@ -892,7 +892,7 @@ def warn_about_unsafe_backup(main_js_path, installed_version_str=None, current_c
 def do_patch(main_js_path, show_search_line=False):
     if not os.path.isfile(main_js_path):
         print(color(f"  [!] Target is not a file: {main_js_path}", COLOR_RED))
-        print(color("  [i] Please select a valid main.js file or Antigravity folder.", COLOR_YELLOW))
+        print(color("  [i] Please select a valid main.js file or Antigravity IDE folder.", COLOR_YELLOW))
         return
 
     ver_status, ver_str = check_ag_version(main_js_path)
@@ -901,11 +901,11 @@ def do_patch(main_js_path, show_search_line=False):
     if ver_status == VersionStatus.TOO_OLD:
         print(color(f"  [!] Unsupported version: {ver_str}", COLOR_RED))
         print(color(f"  [!] Minimum required: {MIN_AG_VERSION}", COLOR_RED))
-        print("  [i] Please update Antigravity and try again.")
+        print("  [i] Please update Antigravity IDE and try again.")
         if not confirmed("Proceed anyway?"):
             return
     elif ver_status == VersionStatus.NOT_FOUND:
-        print(color("  [!] Could not detect Antigravity version (registry key not found).", COLOR_YELLOW))
+        print(color("  [!] Could not detect Antigravity IDE version (registry key not found).", COLOR_YELLOW))
         if not confirmed("Proceed without version check?"):
             return
     elif ver_status == VersionStatus.PARSE_ERROR:
@@ -988,19 +988,19 @@ def do_patch(main_js_path, show_search_line=False):
         print(f"  [+] After:   {hash_after[:8]}...{hash_after[56:]}")
     print(f"  [+] Done at  {time.strftime('%H:%M:%S')}")
     print()
-    print("  Restart Antigravity and sign in.")
+    print("  Restart Antigravity IDE and sign in.")
 
 
 def do_fix_429():
     data_dir = get_user_data_dir()
     if not data_dir or not os.path.isdir(data_dir):
-        print(color("  [!] Antigravity data directory not found.", COLOR_RED))
+        print(color("  [!] Antigravity IDE data directory not found.", COLOR_RED))
         return
 
     print(f"  [*] Data directory: {color(data_dir, COLOR_CYAN)}")
-    print(color("  [!] This will reset your Antigravity configuration (tokens, quota).", COLOR_YELLOW))
+    print(color("  [!] This will reset your Antigravity IDE configuration (tokens, quota).", COLOR_YELLOW))
     print(color("  [!] Dialogues will be preserved, but you will need to sign in again.", COLOR_YELLOW))
-    print(color("  [!] Ensure Antigravity is COMPLETELY closed before proceeding.", COLOR_RED))
+    print(color("  [!] Ensure Antigravity IDE is COMPLETELY closed before proceeding.", COLOR_RED))
 
     if not confirmed("Proceed with the fix?"):
         return
@@ -1020,8 +1020,8 @@ def do_fix_429():
         shutil.move(data_dir, backup_dir)
     except PermissionError:
         print(color("  [!] Permission denied: Could not move data directory.", COLOR_RED))
-        print(color("  [!] Antigravity is likely still running or holding files.", COLOR_RED))
-        print("  [i] Close Antigravity completely (check Task Manager) and try again.")
+        print(color("  [!] Antigravity IDE is likely still running or holding files.", COLOR_RED))
+        print("  [i] Close Antigravity IDE completely (check Task Manager) and try again.")
         return
     except Exception as e:
         print(color(f"  [!] Failed to move data directory: {e}", COLOR_RED))
@@ -1060,7 +1060,7 @@ def do_fix_429():
 
         print(color("\n  [+] HTTP 429 fix applied successfully!", COLOR_GREEN, COLOR_BOLD))
         print("  [i] What to do now:")
-        print("      1. Start Antigravity.")
+        print("      1. Start Antigravity IDE.")
         print("      2. Sign in to your account.")
         print("      3. If you still see errors, run 'Apply patch' (Option 1) again.")
         print("      [!] Note: VPNs or other bypass methods might be detected by Google and cause 429 errors.")
@@ -1175,7 +1175,7 @@ def main():
     # 3. Авто-поиск в системе
     searched = False
     if not main_js_path:
-        print("  [*] Searching for Antigravity installation...")
+        print("  [*] Searching for Antigravity IDE installation...")
         searched = True
         root = find_install_root()
         if root:
@@ -1183,8 +1183,8 @@ def main():
 
     # Если ничего не нашли, просим ввести вручную сразу
     if not main_js_path:
-        print(color("  [!] Antigravity installation not found automatically.", COLOR_YELLOW))
-        print("  [i] Please specify the path to Antigravity or main.js.")
+        print(color("  [!] Antigravity IDE installation not found automatically.", COLOR_YELLOW))
+        print("  [i] Please specify the path to Antigravity IDE or main.js.")
         print_path_examples()
         raw = input(color("\n  Path > ", COLOR_CYAN, COLOR_BOLD)).strip()
         if raw:
@@ -1232,7 +1232,7 @@ def main():
             webbrowser.open(url)
             print(f"  [+] Opening: {color(url, COLOR_CYAN)}")
         elif choice == "5":
-            print("  [i] Enter the path to Antigravity folder or main.js file.")
+            print("  [i] Enter the path to Antigravity IDE folder or main.js file.")
             print_path_examples()
             raw = input(color("\n  Path > ", COLOR_CYAN, COLOR_BOLD)).strip()
             if raw:
@@ -1262,7 +1262,7 @@ if __name__ == "__main__":
         else:
             print("  [!] Could not elevate privileges. The script may fail to modify files.")
     elif os.name == "posix" and not is_admin():
-        print("  [!] Root access is required to patch files in /usr/share/antigravity.")
+        print("  [!] Root access is required to patch files in /usr/share/antigravity-ide.")
         if confirmed("Re-launch with sudo?"):
             try:
                 # В PyInstaller bundle (frozen) sys.executable и sys.argv[0] — это путь к бинарнику.
