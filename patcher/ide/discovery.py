@@ -1,0 +1,237 @@
+import os
+import sys
+import json
+import subprocess
+from enum import Enum
+from packaging.version import Version
+from patcher.constants import AG_REGISTRY_SUBKEY, MIN_AG_VERSION
+
+
+class VersionStatus(Enum):
+    OK = "ok"
+    TOO_OLD = "too_old"
+    NOT_FOUND = "not_found"
+    PARSE_ERROR = "parse_error"
+
+
+def clean_path(raw_path):
+    return raw_path.strip().strip('"').strip("'")
+
+
+def find_install_root():
+    candidates = []
+
+    if sys.platform == "darwin":
+        # На macOS приложение — .app-бандл, main.js лежит внутри Contents/Resources/app
+        mac_candidates = [
+            "/Applications/Antigravity IDE.app",
+            os.path.expanduser("~/Applications/Antigravity IDE.app"),
+            "/Applications/antigravity ide.app",
+            os.path.expanduser("~/Applications/antigravity ide.app"),
+        ]
+        for app in mac_candidates:
+            candidates.append(os.path.join(app, "Contents", "Resources", "app"))
+    elif os.name == "posix":
+        candidates.extend([
+            "/usr/share/antigravity-ide",
+            "/opt/Antigravity IDE",
+            "/opt/antigravity-ide",
+            "/opt/antigravity ide",
+            "/opt/Antigravity IDE/resources/app/out",
+        ])
+
+    if os.name == "nt":
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if local_app_data:
+            candidates.append(os.path.join(local_app_data, "Programs", "Antigravity IDE"))
+        pf = os.environ.get("PROGRAMFILES")
+        if pf:
+            candidates.append(os.path.join(pf, "Antigravity IDE"))
+        pfx86 = os.environ.get("PROGRAMFILES(X86)")
+        if pfx86:
+            candidates.append(os.path.join(pfx86, "Antigravity IDE"))
+
+        try:
+            import winreg
+            for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+                try:
+                    with winreg.OpenKey(hive, AG_REGISTRY_SUBKEY) as key:
+                        install_loc, _ = winreg.QueryValueEx(key, "InstallLocation")
+                        if install_loc and install_loc.strip():
+                            candidates.append(install_loc.strip())
+                except OSError:
+                    pass
+        except ImportError:
+            pass
+
+    for path in candidates:
+        for sub in [
+            os.path.join("resources", "app", "out", "main.js"),
+            os.path.join("resources", "app", "main.js"),
+            os.path.join("out", "main.js"),
+            "main.js",
+        ]:
+            if os.path.exists(os.path.join(path, sub)):
+                return path
+    return ""
+
+
+def find_main_js(root):
+    # macOS: пользователь может передать путь к .app-бандлу напрямую
+    if sys.platform == "darwin" and root.lower().endswith(".app") and os.path.isdir(root):
+        root = os.path.join(root, "Contents", "Resources", "app")
+
+    for sub in [
+        os.path.join("resources", "app", "out", "main.js"),
+        os.path.join("resources", "app", "main.js"),
+        os.path.join("out", "main.js"),
+        "main.js",
+    ]:
+        p = os.path.join(root, sub)
+        if os.path.exists(p):
+            return p
+    return ""
+
+
+def get_ag_version(main_js_path):
+    """Читает версию Antigravity IDE из реестра Windows или package.json на Linux.
+    Возвращает (version_str, is_pkg_mgr).
+    """
+    if os.name == "posix":
+        # Пробуем менеджеры пакетов (apt, rpm) с разными именами
+        pkg_names = ["antigravity-ide", "antigravity-ide-bin", "antigravity-ide-custom"]
+        
+        # dpkg-query (Debian/Ubuntu)
+        for pkg in pkg_names:
+            try:
+                result = subprocess.run(
+                    ["dpkg-query", "-W", "-f=${Version}", pkg],
+                    capture_output=True, text=True,
+                )
+                if result.returncode == 0:
+                    ver = result.stdout.strip()
+                    if ver:
+                        return ver, True
+            except Exception:
+                pass
+
+        # rpm (Fedora/RHEL/openSUSE)
+        for pkg in pkg_names:
+            try:
+                result = subprocess.run(
+                    ["rpm", "-q", "--queryformat", "%{VERSION}", pkg],
+                    capture_output=True, text=True,
+                )
+                if result.returncode == 0:
+                    ver = result.stdout.strip()
+                    if ver:
+                        return ver, True
+            except Exception:
+                pass
+
+        # Fallback: package.json (portable / snap / flatpak)
+        for rel in (
+            os.path.join(os.path.dirname(main_js_path), "..", "package.json"),
+            os.path.join(os.path.dirname(main_js_path), "package.json"),
+        ):
+            pkg = os.path.normpath(rel)
+            if os.path.exists(pkg):
+                try:
+                    with open(pkg, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    ver = data.get("version", "").strip()
+                    if ver:
+                        return ver, False
+                except Exception:
+                    pass
+        return None, False
+
+    if os.name == "nt":
+        try:
+            import winreg
+            for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+                try:
+                    with winreg.OpenKey(hive, AG_REGISTRY_SUBKEY) as key:
+                        display_ver, _ = winreg.QueryValueEx(key, "DisplayVersion")
+                        if display_ver and display_ver.strip():
+                            return display_ver.strip(), True
+                except OSError:
+                    pass
+        except ImportError:
+            pass
+
+    return None, False
+
+
+def check_ag_version(main_js_path):
+    """
+    Проверяет версию Antigravity IDE.
+    Возвращает (VersionStatus, detected_version_str | None).
+    """
+    ver_str, is_pkg_mgr = get_ag_version(main_js_path)
+
+    if ver_str is None:
+        return VersionStatus.NOT_FOUND, None
+
+    try:
+        detected = Version(ver_str)
+        
+        # Минимальная версия: 1.107.0 для кастомных Linux билдов, иначе MIN_AG_VERSION
+        min_ver_str = MIN_AG_VERSION
+        if os.name == "posix" and sys.platform != "darwin" and not is_pkg_mgr:
+            min_ver_str = "1.107.0"
+            
+        minimum = Version(min_ver_str)
+        status = VersionStatus.OK if detected >= minimum else VersionStatus.TOO_OLD
+        return status, ver_str
+    except Exception:
+        return VersionStatus.PARSE_ERROR, ver_str
+
+
+def parse_version_safe(ver_str):
+    if not ver_str:
+        return None
+    try:
+        return Version(ver_str)
+    except Exception:
+        return None
+
+
+def resolve_target_path(raw_path):
+    if not raw_path:
+        return ""
+    cleaned = clean_path(raw_path)
+    if not cleaned:
+        return ""
+    expanded = os.path.expandvars(os.path.expanduser(cleaned))
+    resolved = os.path.abspath(expanded)
+    
+    # Если указана директория, пробуем найти в ней main.js
+    if os.path.isdir(resolved):
+        found = find_main_js(resolved)
+        return found if found else resolved
+    return resolved
+
+
+def assign_custom_path(raw_path):
+    from patcher.asar.discovery import resolve_antigravity_paths
+
+    resolved = resolve_target_path(raw_path)
+    if not os.path.exists(resolved):
+        return None, None
+        
+    if os.path.isfile(resolved) and resolved.endswith("main.js"):
+        return resolved, None
+        
+    asar_path, _ = resolve_antigravity_paths(resolved)
+    if os.path.exists(asar_path):
+        return None, resolved
+        
+    main_js = find_main_js(resolved)
+    if main_js:
+        return main_js, None
+        
+    if os.path.isfile(resolved):
+        return resolved, None
+    else:
+        return None, resolved
