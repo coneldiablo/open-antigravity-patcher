@@ -32,9 +32,15 @@ def ensure_linux_terminal():
     
     bash_cmd = '"$0" "$@"; echo; read -p "  Press Enter to exit..."'
     
+    env = os.environ.copy()
+    if 'LD_LIBRARY_PATH_ORIG' in env:
+        env['LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH_ORIG']
+    else:
+        env.pop('LD_LIBRARY_PATH', None)
+        
     for term in terminals:
         try:
-            subprocess.Popen(term + ['bash', '-c', bash_cmd, executable] + args)
+            subprocess.Popen(term + ['bash', '-c', bash_cmd, executable] + args, env=env)
             sys.exit(0)
         except Exception:
             continue
