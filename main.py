@@ -30,7 +30,7 @@ RUNTIME_EXPERIMENTS_TO_DISABLE = (
 )
 RUNTIME_EXPERIMENTS_VALUE = ",".join(RUNTIME_EXPERIMENTS_TO_DISABLE)
 
-# Единственное место, где хранится GUID установщика Antigravity
+# Единственное место, где хранится GUID установщика Antigravity IDE
 AG_REGISTRY_SUBKEY = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{AA73B3E3-C6C8-45C8-B1DC-4AE56C751432}_is1"
 
 CSI = "\x1b["

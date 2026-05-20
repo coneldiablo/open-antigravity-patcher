@@ -21,7 +21,7 @@
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/AvenCores/open-antigravity-patcher?style=for-the-badge)](https://github.com/AvenCores/open-antigravity-patcher/pulls)
 [![GitHub issues](https://img.shields.io/github/issues/AvenCores/open-antigravity-patcher?style=for-the-badge)](https://github.com/AvenCores/open-antigravity-patcher/issues)
 
-Опенсорс патчер для Antigravity: снимает регионные ограничения без VPN и смены региона аккаунта Google. Опенсурс аналог утилиты [Antigravity в России без VPN и смены региона аккаунта Google](https://github.com/confeden/Antigravity).
+Опенсорс патчер для Antigravity IDE: снимает регионные ограничения без VPN и смены региона аккаунта Google. Опенсурс аналог утилиты [Antigravity IDE в России без VPN и смены региона аккаунта Google](https://github.com/confeden/Antigravity-IDE).
 
 ![maxresdefault](https://i.ibb.co/qL6V7mf0/firefox-1howp-IRks4.png)
 
@@ -42,7 +42,7 @@
 </div>
 
 ## ⚠️ Ошибка HTTP 500 Internal Server Error
-Если при запросе в Antigravity появляется ошибка HTTP 500 Internal Server Error, то ничего не поделать, меняйте аккаунт (желательно на регион, где Antigravity официально работает или куплена платная подписка), платная утилита также её не решала.
+Если при запросе в Antigravity IDE появляется ошибка HTTP 500 Internal Server Error, то ничего не поделать, меняйте аккаунт (желательно на регион, где Antigravity IDE официально работает или куплена платная подписка), платная утилита также её не решала.
 
 **Пример ошибки**
 ```
@@ -90,7 +90,7 @@ Headers: {"Alt-Svc":["h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"],"Cont
 **Важно:** использование VPN, прокси или других способов обхода ограничений может детектироваться Google и приводить к этой ошибке. Google активно борется с методами обхода, и если ваш IP-адрес или другие параметры сессии вызывают подозрение, доступ может быть заблокирован.
 
 **Решение:**
-1. Если вы используете Antigravity версии **1.23.0 или выше**, примените патч (**пункт 1: Apply patch**). Патчер автоматически добавит в `settings.json` необходимые параметры для обхода этой ошибки (подробнее в разделе [Временный runtime settings workaround](#5-временный-runtime-settings-workaround-v123)).
+1. Если вы используете Antigravity IDE версии **1.23.0 или выше**, примените патч (**пункт 1: Apply patch**). Патчер автоматически добавит в `settings.json` необходимые параметры для обхода этой ошибки (подробнее в разделе [Временный runtime settings workaround](#5-временный-runtime-settings-workaround-v123)).
 2. Если патч уже применен или версия ниже 1.23, попробуйте сменить аккаунт Google или использовать другой VPN.
 
 **Пример ошибки:**
@@ -109,20 +109,20 @@ Headers: {"Alt-Svc":["h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"],"Cont
 - [5xx Server Errors: The Complete Guide](https://komodor.com/learn/5xx-server-errors-the-complete-guide/) — подробный разбор серверных ошибок.
 
 ## 🌟 Возможности
-- Автоматический поиск установленного Antigravity в стандартных путях и реестре Windows.
-- Поддержка Linux: поиск по `/usr/share/antigravity`, определение версии через `dpkg`, `rpm` и `package.json`.
+- Автоматический поиск установленного Antigravity IDE в стандартных путях и реестре Windows.
+- Поддержка Linux: поиск по `/usr/share/antigravity-ide`, определение версии через `dpkg`, `rpm` и `package.json`.
 - Поддержка macOS: поиск `.app`-бандла в `/Applications` и `~/Applications`, ad-hoc переподпись после изменения `main.js`.
 - Создание резервной копии `main.js.bak` перед изменениями.
 - Применение и откат патча через простое меню.
 - Поддержка путей `resources/app/out/main.js` и `resources/app/main.js`.
 - Цветной вывод и попытка автоматического повышения прав (UAC на Windows, предложение `sudo` на Linux).
-- Проверка минимальной версии Antigravity (>= `1.22.2`) перед применением патча.
-- Определение версии Antigravity через реестр Windows, пакетный менеджер на Linux или `package.json` на macOS.
+- Проверка минимальной версии Antigravity IDE (>= `1.22.2`) перед применением патча.
+- Определение версии Antigravity IDE через реестр Windows, пакетный менеджер на Linux или `package.json` на macOS.
 - Обнаружение уже применённого патча с предложением применить повторно.
-- Временный runtime workaround для Antigravity `1.23+`: фиксация стабильного Cloud Code endpoint и отключение проблемных Cascade/model experiments через `settings.json`.
+- Временный runtime workaround для Antigravity IDE `1.23+`: фиксация стабильного Cloud Code endpoint и отключение проблемных Cascade/model experiments через `settings.json`.
 
 ## 🚀 Как использовать
-1. Закройте Antigravity.
+1. Закройте Antigravity IDE.
 2. Запустите патчер от имени администратора (скрипт сам запросит повышение прав при необходимости).
 3. В меню выберите нужное действие:
 
@@ -143,22 +143,22 @@ python main.py
 Запуск с указанием пути:
 ```bash
 # Windows
-python main.py "C:\\Users\\<username>\\AppData\\Local\\Programs\\Antigravity"
-python main.py "C:\\Users\\<username>\\AppData\\Local\\Programs\\Antigravity\\resources\\app\\out\\main.js"
+python main.py "C:\\Users\\<username>\\AppData\\Local\\Programs\\Antigravity IDE"
+python main.py "C:\\Users\\<username>\\AppData\\Local\\Programs\\Antigravity IDE\\resources\\app\\out\\main.js"
 
 # Linux
-python main.py /usr/share/antigravity
-python main.py /usr/share/antigravity/resources/app/out/main.js
+python main.py /usr/share/antigravity-ide
+python main.py /usr/share/antigravity-ide/resources/app/out/main.js
 
 # macOS
-python3 main.py /Applications/Antigravity.app
-python3 main.py ~/Applications/Antigravity.app
-python3 main.py /Applications/Antigravity.app/Contents/Resources/app/out/main.js
+python3 main.py /Applications/Antigravity\ IDE.app
+python3 main.py ~/Applications/Antigravity\ IDE.app
+python3 main.py /Applications/Antigravity\ IDE.app/Contents/Resources/app/out/main.js
 ```
 
 Если `main.js` находится рядом со скриптом, путь указывать не нужно — он будет найден автоматически.
 
-> **macOS:** если `Antigravity.app` лежит в `/Applications`, запись потребует `sudo` (скрипт сам предложит перезапуск). Для установки в `~/Applications` или пользовательскую директорию `sudo` не нужен. После успешного патча `.app` автоматически переподписывается ad-hoc подписью (`codesign --force --deep --sign -`) — без этого Electron с Hardened Runtime не запустится на macOS.
+> **macOS:** если `Antigravity IDE.app` лежит в `/Applications`, запись потребует `sudo` (скрипт сам предложит перезапуск). Для установки в `~/Applications` или пользовательскую директорию `sudo` не нужен. После успешного патча `.app` автоматически переподписывается ad-hoc подписью (`codesign --force --deep --sign -`) — без этого Electron с Hardened Runtime не запустится на macOS.
 
 ## ❓ Что именно меняется
 
@@ -172,7 +172,7 @@ python3 main.py /Applications/Antigravity.app/Contents/Resources/app/out/main.js
 - **v1.22–v1.22.x:** `if(this.w.resetIsTierGCPTos(),this.t.isGoogleInternal)` → `if(this.w.resetIsTierGCPTos(),true)`
 - **v1.23+:** `if(this.t.send({...}),this.y.resetIsTierGCPTos(),this.w.isGoogleInternal)` → `if(this.t.send({...}),this.y.resetIsTierGCPTos(),true)`
 
-Патчер автоматически определяет версию Antigravity и применяет соответствующий паттерн для корректного обхода авторизации.
+Патчер автоматически определяет версию Antigravity IDE и применяет соответствующий паттерн для корректного обхода авторизации.
 
 ### 3. `ideName` → `"antigravity-insiders"`
 Заменяет `ideName:"antigravity"` на `ideName:"antigravity-insiders"` для корректной идентификации клиента.
@@ -181,7 +181,7 @@ python3 main.py /Applications/Antigravity.app/Contents/Resources/app/out/main.js
 Заменяет spread тернар `...s?{}:{errorType:"ineligible",reason:a,verificationUrl:i}` на `...s?{}:{}` — ошибка ineligible не отправляется, экран блокировки не показывается.
 
 ### 5. Временный runtime settings workaround (v1.23+)
-Начиная с Antigravity `1.23+` часть пользователей после обновления получает ошибку:
+Начиная с Antigravity IDE `1.23+` часть пользователей после обновления получает ошибку:
 
 ```json
 {
@@ -193,7 +193,7 @@ python3 main.py /Applications/Antigravity.app/Contents/Resources/app/out/main.js
 }
 ```
 
-В логах при этом появляются запросы к `daily-cloudcode-pa.googleapis.com` и новые Cascade/model experiments. Это временное решение: его стоит убрать или пересмотреть, когда Antigravity стабилизирует новый маршрут/эксперимент или вернёт совместимое поведение. Workaround добавляет в пользовательский `settings.json`:
+В логах при этом появляются запросы к `daily-cloudcode-pa.googleapis.com` и новые Cascade/model experiments. Это временное решение: его стоит убрать или пересмотреть, когда Antigravity IDE стабилизирует новый маршрут/эксперимент или вернёт совместимое поведение. Workaround добавляет в пользовательский `settings.json`:
 
 ```json
 {
@@ -209,8 +209,8 @@ python3 main.py /Applications/Antigravity.app/Contents/Resources/app/out/main.js
 Если `settings.json` уже существует, перед изменением создаётся резервная копия вида `settings.json.bak-YYYYMMDD-HHMMSS`. Если `main.js` уже пропатчен, пункт `Apply patch` всё равно применит runtime workaround без необходимости повторно менять `main.js`.
 
 > **Примечание:** 
-> - Патч `onboardUser injection` отключён начиная с v1.22+, так как в новых версиях Antigravity `onboardUser` уже вызывается нативно, и инъекция дублирует вызов, ломая поток авторизации.
-> - Начиная с v1.0.8 патчер использует **версионный выбор auth-паттерна**: для версий Antigravity < 1.23 применяется старый паттерн, для v1.23+ — новый с дополнительным вызовом `send()`.
+> - Патч `onboardUser injection` отключён начиная с v1.22+, так как в новых версиях Antigravity IDE `onboardUser` уже вызывается нативно, и инъекция дублирует вызов, ломая поток авторизации.
+> - Начиная с v1.0.8 патчер использует **версионный выбор auth-паттерна**: для версий Antigravity IDE < 1.23 применяется старый паттерн, для v1.23+ — новый с дополнительным вызовом `send()`.
 
 ## 🔍 Логика поиска файла
 
@@ -220,14 +220,14 @@ python3 main.py /Applications/Antigravity.app/Contents/Resources/app/out/main.js
 2. Текущая директория (`./main.js`).
 3. Автоматический поиск по стандартным путям:
    - **Windows:**
-     - `%LOCALAPPDATA%\Programs\Antigravity`
+     - `%LOCALAPPDATA%\Programs\Antigravity IDE`
    - **Linux:**
-     - `/usr/share/antigravity`
-     - `/opt/Antigravity`
-     - `/opt/Antigravity/resources/app/out`
+     - `/usr/share/antigravity-ide`
+     - `/opt/Antigravity IDE`
+     - `/opt/Antigravity IDE/resources/app/out`
    - **macOS:**
-     - `/Applications/Antigravity.app/Contents/Resources/app`
-     - `~/Applications/Antigravity.app/Contents/Resources/app`
+     - `/Applications/Antigravity IDE.app/Contents/Resources/app`
+     - `~/Applications/Antigravity IDE.app/Contents/Resources/app`
 4. Реестр Windows (ключ `{AA73B3E3-C6C8-45C8-B1DC-4AE56C751432}_is1` в `HKCU` и `HKLM`: `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\`).
 
 Внутри найденной директории проверяются пути:
@@ -238,15 +238,15 @@ python3 main.py /Applications/Antigravity.app/Contents/Resources/app/out/main.js
 
 На macOS скрипт также принимает путь к `.app`-бандлу напрямую — `Contents/Resources/app/out/main.js` ресолвится автоматически.
 
-## 🔎 Определение версии Antigravity
+## 🔎 Определение версии Antigravity IDE
 
 | Платформа | Метод определения версии |
 |---|---|
 | **Windows** | Реестр: `DisplayVersion` из ключа `{AA73B3E3-...}_is1` |
-| **Linux (deb)** | `dpkg-query -W antigravity` |
-| **Linux (rpm)** | `rpm -q --queryformat %{VERSION} antigravity` |
+| **Linux (deb)** | `dpkg-query -W antigravity-ide` |
+| **Linux (rpm)** | `rpm -q --queryformat %{VERSION} antigravity-ide` |
 | **Linux (portable/snap/flatpak)** | `package.json` рядом с `main.js` |
-| **macOS** | `package.json` в `Antigravity.app/Contents/Resources/app/` |
+| **macOS** | `package.json` в `Antigravity IDE.app/Contents/Resources/app/` |
 
 Если версия не определена, патчер предлагает продолжить без проверки. Если версия ниже `1.22.2` — предупреждает и также предлагает выбор.
 
@@ -262,19 +262,19 @@ python3 main.py /Applications/Antigravity.app/Contents/Resources/app/out/main.js
 
 - **Windows**: автоматический UAC-запрос через `ShellExecuteW` с параметром `runas`. Корректно обрабатывает пути с пробелами.
 - **Linux**: если скрипт запущен не от root, предлагает перезапуститься через `sudo` (`os.execvp`). При отказе продолжает с предупреждением о возможных ошибках записи. При этом runtime workaround пишет в `settings.json` исходного пользователя (`SUDO_USER`/`SUDO_UID`), а не в `/root/.config/...`.
-- **macOS**: использует ту же posix-ветку — `sudo` предлагается, если запущено без root. Для `~/Applications/Antigravity.app` на `sudo` можно ответить «n» (директория уже доступна на запись), для `/Applications/Antigravity.app` — согласиться. Пользовательский `settings.json` при запуске через `sudo` также берётся из home исходного пользователя, а не `root`.
+- **macOS**: использует ту же posix-ветку — `sudo` предлагается, если запущено без root. Для `~/Applications/Antigravity IDE.app` на `sudo` можно ответить «n» (директория уже доступна на запись), для `/Applications/Antigravity IDE.app` — согласиться. Пользовательский `settings.json` при запуске через `sudo` также берётся из home исходного пользователя, а не `root`.
 
 ## 🍎 Особенности macOS
 
 ### Переподпись `.app` после патча
 
-Любое изменение файла внутри подписанного `.app`-бандла нарушает code signature. Electron-приложения с включённым Hardened Runtime (Antigravity — одно из них) после этого **не запускаются** на macOS — до того, как Gatekeeper вообще покажет пользователю диалог.
+Любое изменение файла внутри подписанного `.app`-бандла нарушает code signature. Electron-приложения с включённым Hardened Runtime (Antigravity IDE — одно из них) после этого **не запускаются** на macOS — до того, как Gatekeeper вообще покажет пользователю диалог.
 
 Чтобы `.app` продолжал работать, скрипт после `do_patch` и `do_restore` автоматически выполняет:
 
 ```bash
-codesign --force --deep --sign - /path/to/Antigravity.app
-xattr -dr com.apple.quarantine /path/to/Antigravity.app
+codesign --force --deep --sign - /path/to/Antigravity\ IDE.app
+xattr -dr com.apple.quarantine /path/to/Antigravity\ IDE.app
 ```
 
 `--sign -` — ad-hoc подпись (без Developer ID). Этого достаточно для локального запуска приложения. Notarization не требуется.
@@ -286,18 +286,18 @@ xcode-select --install
 
 ### Ошибка "Operation not permitted" при патчинге
 
-Если вы столкнулись с ошибкой `[!] Backup error: [Errno 1] Operation not permitted: '/Applications/Antigravity.app/Contents/Resources/app/out/main.js.bak’`:
+Если вы столкнулись с ошибкой `[!] Backup error: [Errno 1] Operation not permitted: '/Applications/Antigravity IDE.app/Contents/Resources/app/out/main.js.bak'`:
 
 1. Добавьте для терминала разрешение на полный доступ к диску: **Системные настройки → Конфиденциальность и безопасность → Полный доступ к диску** (System Settings → Privacy & Security → Full Disk Access).
 2. Снимите карантин с приложения командой:
    ```bash
-   sudo xattr -rd com.apple.quarantine /path/to/Antigravity.app
+   sudo xattr -rd com.apple.quarantine /path/to/Antigravity\ IDE.app
    ```
 
 ### Если приложение не запускается после патча
 
 1. Убедись, что `codesign` доступен: `which codesign`.
-2. Проверь, что `.app` был переподписан: `codesign -dv /Applications/Antigravity.app 2>&1 | grep Authority` — должен быть `Signature=adhoc`.
+2. Проверь, что `.app` был переподписан: `codesign -dv /Applications/Antigravity\ IDE.app 2>&1 | grep Authority` — должен быть `Signature=adhoc`.
 3. Если macOS всё равно блокирует: `Системные настройки → Конфиденциальность и безопасность` — внизу будет кнопка «Открыть всё равно».
 
 ## ⚙️ Требования
@@ -306,8 +306,8 @@ xcode-select --install
 - **Зависимости**: `packaging` (для сравнения версий)
 - **ОС**:
   - **Windows** — полная поддержка автопоиска через реестр и UAC.
-  - **Linux** — автопоиск в `/usr/share/antigravity`, определение версии через `dpkg`/`rpm`/`package.json`, sudo-повышение.
-  - **macOS** — автопоиск в `/Applications/Antigravity.app` и `~/Applications/Antigravity.app`, определение версии через `package.json`, ad-hoc переподпись через `codesign` (Xcode Command Line Tools).
+  - **Linux** — автопоиск в `/usr/share/antigravity-ide`, определение версии через `dpkg`/`rpm`/`package.json`, sudo-повышение.
+  - **macOS** — автопоиск в `/Applications/Antigravity IDE.app` и `~/Applications/Antigravity IDE.app`, определение версии через `package.json`, ad-hoc переподпись через `codesign` (Xcode Command Line Tools).
 - **Минимальная версия Antigravity**: `1.22.2`
 - **Поддерживаемые версии**: `1.22.2` и выше (с версионным выбором auth-паттерна для `1.23+`)
 
