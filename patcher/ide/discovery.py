@@ -23,21 +23,38 @@ def find_portable_candidates(search_type="ide"):
     import string
     roots = []
 
-    # 1. Добавляем домашнюю директорию и стандартные подпапки
+    # 1. Сначала добавляем специфичные папки пользователя (включая русские локализации)
     home = os.path.expanduser("~")
     if home and os.path.isdir(home):
-        roots.append(home)
-        for sub in ["Downloads", "Desktop", "Documents"]:
+        standard_subs = [
+            "Downloads", "Загрузки",
+            "Desktop", "Рабочий стол",
+            "Documents", "Документы"
+        ]
+        for sub in standard_subs:
             p = os.path.join(home, sub)
             if os.path.isdir(p):
                 roots.append(p)
 
-    # 2. Добавляем текущую рабочую директорию
+    # 2. На Linux просим систему дать точные пути через xdg-user-dir
+    if sys.platform != "win32" and os.name == "posix":
+        import subprocess
+        for folder_type in ["DOWNLOAD", "DESKTOP", "DOCUMENTS"]:
+            try:
+                res = subprocess.run(["xdg-user-dir", folder_type], capture_output=True, text=True, check=False)
+                if res.returncode == 0:
+                    path = res.stdout.strip()
+                    if path and os.path.isdir(path):
+                        roots.append(path)
+            except Exception:
+                pass
+
+    # 3. Текущая директория запуска
     cwd = os.getcwd()
-    if cwd and os.path.isdir(cwd) and cwd not in roots:
+    if cwd and os.path.isdir(cwd):
         roots.append(cwd)
 
-    # 3. Для Windows добавляем корни других дисков (кроме системного C:)
+    # 4. Корни других дисков для Windows
     if os.name == "nt":
         for letter in string.ascii_uppercase:
             if letter == "C":
@@ -45,6 +62,20 @@ def find_portable_candidates(search_type="ide"):
             drive = f"{letter}:\\"
             if os.path.exists(drive):
                 roots.append(drive)
+
+    # 5. Домашняя папка целиком (как крайний вариант в самом конце)
+    if home and os.path.isdir(home):
+        roots.append(home)
+
+    # Убираем дубликаты, сохраняя порядок приоритетности
+    seen = set()
+    unique_roots = []
+    for r in roots:
+        r_abs = os.path.abspath(r)
+        if r_abs not in seen:
+            seen.add(r_abs)
+            unique_roots.append(r_abs)
+    roots = unique_roots
 
     candidates = []
     visited_dirs = 0
@@ -117,7 +148,7 @@ def find_portable_candidates(search_type="ide"):
                                 from patcher.utils.console import color
                                 print(color(f"  [+] Found portable {label} at: {dirpath}", COLOR_GREEN))
                             except Exception:
-                                    print(f"  [+] Found portable {label} at: {dirpath}")
+                                print(f"  [+] Found portable {label} at: {dirpath}")
 
         if visited_dirs > max_dirs:
             break
