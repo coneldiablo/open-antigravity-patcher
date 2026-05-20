@@ -2092,18 +2092,42 @@ def main():
             webbrowser.open(url)
             print(f"  [+] Opening: {color(url, COLOR_CYAN)}")
         elif choice == "7":
-            print("  [i] Enter the path to Antigravity IDE folder, Antigravity folder, or main.js file.")
-            print_path_examples()
-            raw = input(color("\n  Path > ", COLOR_CYAN, COLOR_BOLD)).strip()
-            if raw:
-                new_main_js, new_ag_root = assign_custom_path(raw)
-                if new_main_js or new_ag_root:
-                    main_js_path = new_main_js if new_main_js else ""
-                    antigravity_root = new_ag_root if new_ag_root else ""
-                    searched = False
-                    print(color("  [+] Target paths updated successfully!", COLOR_GREEN))
-                else:
-                    print(color("  [!] Could not resolve a valid target from the provided path.", COLOR_RED))
+            while True:
+                redraw_main_screen(main_js_path, antigravity_root, show_search_line=searched)
+                print(color("  1. Select Antigravity IDE path", COLOR_GREEN))
+                print(color("  2. Select Antigravity path", COLOR_GREEN))
+                print(color("  0. Back", COLOR_RED))
+
+                sub_choice = input(color("\n  > ", COLOR_CYAN, COLOR_BOLD)).strip()
+                if sub_choice == "0":
+                    break
+                
+                if sub_choice == "1":
+                    print("  [i] Enter the path to Antigravity IDE folder or main.js file.")
+                    print_path_examples()
+                    raw = input(color("\n  IDE Path > ", COLOR_CYAN, COLOR_BOLD)).strip()
+                    if raw:
+                        new_main_js, _ = assign_custom_path(raw)
+                        if new_main_js:
+                            main_js_path = new_main_js
+                            searched = False
+                            print(color("  [+] Antigravity IDE path updated!", COLOR_GREEN))
+                        else:
+                            print(color("  [!] Could not resolve a valid Antigravity IDE target.", COLOR_RED))
+                    pause()
+                elif sub_choice == "2":
+                    print("  [i] Enter the path to Antigravity folder.")
+                    print_path_examples()
+                    raw = input(color("\n  Antigravity Path > ", COLOR_CYAN, COLOR_BOLD)).strip()
+                    if raw:
+                        _, new_ag_root = assign_custom_path(raw)
+                        if new_ag_root:
+                            antigravity_root = new_ag_root
+                            searched = False
+                            print(color("  [+] Antigravity path updated!", COLOR_GREEN))
+                        else:
+                            print(color("  [!] Could not resolve a valid Antigravity target.", COLOR_RED))
+                    pause()
             handled = True
         else:
             handled = False
