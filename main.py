@@ -164,6 +164,32 @@ def run_as_admin():
         return False
 
 
+def terminate_processes(names):
+    """Пытается завершить процессы по их именам."""
+    success = False
+    for name in names:
+        try:
+            if os.name == "nt":
+                exec_name = name if name.lower().endswith(".exe") else f"{name}.exe"
+                res = subprocess.run(
+                    ["taskkill", "/F", "/IM", exec_name],
+                    capture_output=True, text=True
+                )
+                if res.returncode == 0:
+                    success = True
+            else:
+                res = subprocess.run(
+                    ["pkill", "-f", name],
+                    capture_output=True, text=True
+                )
+                if res.returncode == 0:
+                    success = True
+        except Exception:
+            pass
+    return success
+
+
+
 # ---------------------------------------------------------------------------
 # Поиск установки
 # ---------------------------------------------------------------------------
@@ -1014,12 +1040,28 @@ def do_patch(main_js_path, show_search_line=False):
         print("  [!] No patches applied.")
         return
 
-    try:
-        with open(main_js_path, "w", encoding="utf-8") as f:
-            f.write(new_content)
-        fix_posix_permissions(main_js_path)
-    except Exception as e:
-        print(f"  [!] Write error: {e}")
+    write_success = False
+    for attempt in range(2):
+        try:
+            with open(main_js_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            fix_posix_permissions(main_js_path)
+            write_success = True
+            break
+        except PermissionError as e:
+            if attempt == 0:
+                print(color(f"  [!] Permission denied (file locked): {e}", COLOR_YELLOW))
+                if confirmed("Would you like to automatically close running Antigravity processes and retry?"):
+                    terminate_processes(["Antigravity", "Antigravity IDE", "antigravity", "antigravity-ide"])
+                    time.sleep(1.5)
+                    continue
+            print(color(f"  [!] Write error (Permission denied): {e}", COLOR_RED))
+            return
+        except Exception as e:
+            print(color(f"  [!] Write error: {e}", COLOR_RED))
+            return
+
+    if not write_success:
         return
 
     hash_after = file_hash(main_js_path)
@@ -1061,16 +1103,29 @@ def do_fix_429():
 
     print(f"  [*] Moving current data to: {os.path.basename(backup_dir)}...")
 
-    try:
-        shutil.move(data_dir, backup_dir)
-    except PermissionError:
-        print(color("  [!] Permission denied: Could not move data directory.", COLOR_RED))
-        print(color("  [!] Antigravity IDE is likely still running or holding files.", COLOR_RED))
-        print("  [i] Close Antigravity IDE completely (check Task Manager) and try again.")
-        return
-    except Exception as e:
-        print(color(f"  [!] Failed to move data directory: {e}", COLOR_RED))
-        print("  [i] Try running the patcher as administrator.")
+    move_success = False
+    for attempt in range(2):
+        try:
+            shutil.move(data_dir, backup_dir)
+            move_success = True
+            break
+        except PermissionError as e:
+            if attempt == 0:
+                print(color(f"  [!] Permission denied (files locked): {e}", COLOR_YELLOW))
+                if confirmed("Would you like to automatically close running Antigravity processes and retry?"):
+                    terminate_processes(["Antigravity", "Antigravity IDE", "antigravity", "antigravity-ide"])
+                    time.sleep(1.5)
+                    continue
+            print(color("  [!] Permission denied: Could not move data directory.", COLOR_RED))
+            print(color("  [!] Antigravity IDE is likely still running or holding files.", COLOR_RED))
+            print("  [i] Close Antigravity IDE completely (check Task Manager) and try again.")
+            return
+        except Exception as e:
+            print(color(f"  [!] Failed to move data directory: {e}", COLOR_RED))
+            print("  [i] Try running the patcher as administrator.")
+            return
+
+    if not move_success:
         return
 
     print(color("  [+] Data moved to backup", COLOR_GREEN))
@@ -1565,24 +1620,40 @@ def pack_asar(source_dir, asar_path, reference_asar_path=None):
                 with open(temp_payload_path, 'rb') as pay_f:
                     shutil.copyfileobj(pay_f, out_f)
             
-            if os.path.exists(asar_path):
+            replace_success = False
+            for attempt in range(2):
                 try:
-                    os.remove(asar_path)
-                except PermissionError:
-                    temp_old_path = asar_path + ".old"
-                    if os.path.exists(temp_old_path):
+                    if os.path.exists(asar_path):
                         try:
-                            os.remove(temp_old_path)
-                        except Exception:
-                            pass
-                    try:
-                        os.rename(asar_path, temp_old_path)
-                        print(f"  [*] Locked file renamed to {os.path.basename(temp_old_path)}")
-                    except Exception as e:
-                        print(f"  [!] Error: Could not overwrite or rename '{asar_path}' (locked by another process). {e}")
-                        return False
+                            os.remove(asar_path)
+                        except PermissionError:
+                            temp_old_path = asar_path + ".old"
+                            if os.path.exists(temp_old_path):
+                                try:
+                                    os.remove(temp_old_path)
+                                except Exception:
+                                    pass
+                            os.rename(asar_path, temp_old_path)
+                            print(f"  [*] Locked file renamed to {os.path.basename(temp_old_path)}")
 
-            shutil.move(temp_asar_path, asar_path)
+                    shutil.move(temp_asar_path, asar_path)
+                    replace_success = True
+                    break
+                except PermissionError as e:
+                    if attempt == 0:
+                        print(color(f"  [!] Permission denied (ASAR file locked): {e}", COLOR_YELLOW))
+                        if confirmed("Would you like to automatically close running Antigravity processes and retry?"):
+                            terminate_processes(["Antigravity", "Antigravity IDE", "antigravity", "antigravity-ide"])
+                            time.sleep(1.5)
+                            continue
+                    print(color(f"  [!] Error: Could not overwrite or rename '{asar_path}' (locked by another process). {e}", COLOR_RED))
+                    return False
+                except Exception as e:
+                    print(color(f"  [!] Error during ASAR replacement: {e}", COLOR_RED))
+                    return False
+
+            if not replace_success:
+                return False
             print("  [+] Packing completed successfully.")
             
             if os.path.exists(unpacked_dir) and not os.listdir(unpacked_dir):
