@@ -550,11 +550,12 @@ def patch_runtime_settings(ag_version=None):
         }
 
     settings_dir = os.path.dirname(settings_path)
+    data_dir = os.path.dirname(settings_dir)
     if not os.path.isdir(settings_dir):
         try:
             os.makedirs(settings_dir, exist_ok=True)
             # Fix permissions on POSIX if we just created the dir as root
-            fix_posix_permissions(settings_dir)
+            fix_posix_permissions(data_dir)
         except Exception as e:
             return {
                 "Name": "temporary runtime settings workaround",
