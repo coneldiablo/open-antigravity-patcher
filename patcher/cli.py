@@ -37,18 +37,25 @@ def pause():
 def print_launch_examples():
     script_name = os.path.basename(sys.argv[0]) or "main.py"
     cmd = script_name if getattr(sys, "frozen", False) else f"python {script_name}"
+    windows_example = f'{cmd} "C:\\Path\\To\\Antigravity IDE"'
+    macos_example = f'{cmd} "/Applications/Antigravity IDE.app"'
+    linux_example = f'{cmd} "/usr/share/antigravity-ide"'
 
     print(f"  [i] Usage examples with custom path:")
-    print(f"      Windows: {color(f'{cmd} \"C:\\Path\\To\\Antigravity IDE\"', COLOR_YELLOW)}")
-    print(f"      macOS:   {color(f'{cmd} \"/Applications/Antigravity IDE.app\"', COLOR_YELLOW)}")
-    print(f"      Linux:   {color(f'{cmd} \"/usr/share/antigravity-ide\"', COLOR_YELLOW)}")
+    print(f"      Windows: {color(windows_example, COLOR_YELLOW)}")
+    print(f"      macOS:   {color(macos_example, COLOR_YELLOW)}")
+    print(f"      Linux:   {color(linux_example, COLOR_YELLOW)}")
 
 
 def print_path_examples():
-    print(f"  [i] Path examples:")
-    print(f"      Windows: {color(r'C:\\Users\\Name\\AppData\\Local\\Programs\\Antigravity IDE', COLOR_YELLOW)}")
-    print(f"      macOS:   {color('/Applications/Antigravity IDE.app', COLOR_YELLOW)}")
-    print(f"      Linux:   {color('/usr/share/antigravity-ide', COLOR_YELLOW)}")
+    windows_path = r"C:\Users\Name\AppData\Local\Programs\Antigravity IDE"
+    macos_path = "/Applications/Antigravity IDE.app"
+    linux_path = "/usr/share/antigravity-ide"
+
+    print("  [i] Path examples:")
+    print(f"      Windows: {color(windows_path, COLOR_YELLOW)}")
+    print(f"      macOS:   {color(macos_path, COLOR_YELLOW)}")
+    print(f"      Linux:   {color(linux_path, COLOR_YELLOW)}")
 
 
 def prompt_yn(question):
