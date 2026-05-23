@@ -38,8 +38,8 @@ Attach the compiled `dist/Open_AG_Patcher_macOS` or zipped `Open_AG_Patcher_macO
 Verified local build:
 
 ```text
-Binary SHA256: e64c60e70956ef7d12c8e818c4e46b1e6b1a3f4bdde5d7a35833434d38d5f4cf
-Zip SHA256:    389c7d6e042ab2d1c548b05355fb5a5863260b3a04d1b055f75d2dccd6be63a5
+Binary SHA256: 890a808e63ad9bdc7d4d8a44b84406eaa2ac865cee207591ee33bc730b12e66b
+Zip SHA256:    072a5dbd8f8cc4caeed18d18da85fb31325579b7b41911801820234e185b078b
 Architecture:  x86_64 + arm64
 ```
 

@@ -1,6 +1,7 @@
 import os
 import sys
 import webbrowser
+import locale
 
 from patcher.constants import (
     VERSION,
@@ -58,15 +59,42 @@ def print_path_examples():
     print(f"      Linux:   {color(linux_path, COLOR_YELLOW)}")
 
 
+def _read_console_line(prompt):
+    print(prompt, end="", flush=True)
+
+    stdin_buffer = getattr(sys.stdin, "buffer", None)
+    if stdin_buffer is None:
+        return sys.stdin.readline().rstrip("\r\n")
+
+    raw = stdin_buffer.readline()
+    if not raw:
+        return ""
+
+    encodings = [
+        sys.stdin.encoding,
+        locale.getpreferredencoding(False),
+        "utf-8",
+        "cp1251",
+        "latin-1",
+    ]
+    for encoding in [e for e in encodings if e]:
+        try:
+            return raw.decode(encoding).rstrip("\r\n")
+        except UnicodeDecodeError:
+            pass
+
+    return raw.decode("utf-8", errors="replace").rstrip("\r\n")
+
+
 def prompt_yn(question):
     question = question.rstrip()
     prompt = f"  [?] {question} ({color('y', COLOR_GREEN)}/{color('n', COLOR_RED)}): "
-    return input(prompt).strip().lower()
+    return _read_console_line(prompt).strip().lower()
 
 
 def confirmed(question):
     """Возвращает True, если пользователь ответил 'y'."""
-    return prompt_yn(question) == "y"
+    return prompt_yn(question) in ("y", "yes", "\u0434", "\u0434\u0430")
 
 
 def print_target_info(main_js_path, antigravity_root="", show_search_line=False):
